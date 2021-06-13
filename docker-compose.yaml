@@ -1,0 +1,57 @@
+version: '3'
+services:
+  testtwo-mysql-server:
+    restart: always
+    container_name: testtwo-mysql-server
+    image: mysql:5.7
+    env_file:
+      - .env
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_ROOT_HOST: ${MYSQL_ROOT_HOST}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+#    expose:
+#      - ${MYSQL_PORT}
+    ports:
+      - ${MYSQL_PORT}:3306
+    volumes:
+    - testtwo-mysql:/var/lib/mysql
+    networks:
+      - spring-cloud-network
+#    healthcheck:
+#      test: "/usr/bin/mysql --user=${MYSQL_USER} --password=${MYSQL_PASSWORD} --execute \"SHOW DATABASES;\""
+#      interval: 2s
+#      timeout: 20s
+#      retries: 10
+
+  testtwo-server:
+    container_name: testtwo-server
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: testtwo:latest
+    restart: unless-stopped
+    env_file:
+      - .env
+#    environment:
+#      MYSQL_USER: ${MYSQL_USER}
+#      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+#      MYSQL_DATABASE: ${MYSQL_DATABASE}
+#      MYSQL_PORT: ${MYSQL_PORT}
+#      MYSQL_HOST: ${MYSQL_HOST}
+    #command: ./wait-for.sh db:27017 -- node ./bin/www
+    ports:
+      - 8080:8080
+    networks:
+      - spring-cloud-network
+    depends_on:
+      - testtwo-mysql-server
+
+networks:
+  spring-cloud-network:
+    driver: bridge
+
+volumes:
+  testtwo-mysql:
